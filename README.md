@@ -75,7 +75,7 @@ Clone or copy the two files into the same directory:
 ```
 project/
 ├── Aridhi.py     # contains the AridhiGenerator class
-└── main.py       # entry point / CLI driver
+└── Generate.py       # entry point / CLI driver
 ```
 
 No `pip install` is required.
