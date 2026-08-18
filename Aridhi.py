@@ -1,4 +1,5 @@
 from itertools import product
+import re
 
 
 class AridhiGenerator:
@@ -12,6 +13,27 @@ class AridhiGenerator:
     r = 3
 
     def __init__(self, n, level):
+
+        # -------------------------------------------------
+        # User input limits
+        # -------------------------------------------------
+
+        if not isinstance(n, int):
+            raise TypeError("mAtrA count must be an integer.")
+
+        if n < 1 or n > 128:
+            raise ValueError(
+                "mAtrA count must be between 1 and 128."
+            )
+
+        if level not in [
+            "Simple",
+            "Moderate",
+            "Hard"
+        ]:
+            raise ValueError(
+                "Level must be Simple, Moderate, or Hard."
+            )
 
         self.n = n
         self.level = level
@@ -235,178 +257,327 @@ class AridhiGenerator:
         return " ".join(result)
 
     # =====================================================
-    # SIMPLE
+    # MINI ARIDHI GENERATION
     #
-    # n = 3x + 2y
+    # The selected level now applies to x.
     # =====================================================
 
-    def generate_simple(self):
+    def generate_mini_aridhis(
+        self,
+        total,
+        level
+    ):
 
-        for x in range(
-            0,
-            self.n // 3 + 1
-        ):
+        result = []
 
-            remaining = self.n - 3 * x
+        # -------------------------------------------------
+        # SIMPLE MINI ARIDHI
+        # total = 3x + 2y
+        # -------------------------------------------------
 
-            if remaining % 2 != 0:
-                continue
+        if level == "Simple":
 
-            y = remaining // 2
-
-            if (
-                x > y
-                and x != y
-                and y != 1
+            for x in range(
+                0,
+                total // 3 + 1
             ):
 
-                self.aridhis.append(
-                    (x, y, x, y, x)
-                )
+                remaining = total - 3 * x
 
-    # =====================================================
-    # MODERATE
-    #
-    # (x-l) + y + x + y + (x+l)
-    #
-    # n = 3x + 2y
-    # =====================================================
-
-    def generate_moderate(self):
-
-        for x in range(
-            0,
-            self.n // 3 + 1
-        ):
-
-            remaining = self.n - 3 * x
-
-            if remaining % 2 != 0:
-                continue
-
-            y = remaining // 2
-
-            if (
-                x > y
-                and x != y
-                and y != 1
-            ):
-
-                for l in range(
-                    -(x // 2),
-                    x // 2 + 1
-                ):
-
-                    a = x - l
-                    b = x + l
-
-                    if (
-                        l != 0
-                        and a > y
-                        and b > y
-                        and a != y
-                        and b != y
-                    ):
-
-                        self.aridhis.append(
-                            (a, y, x, y, b)
-                        )
-
-    # =====================================================
-    # HARD
-    #
-    # n = 3x + y + z
-    #
-    # y = 2z OR z = 2y
-    # =====================================================
-
-    def generate_hard(self):
-
-        for v in range(
-            self.n - 1,
-            0,
-            -1
-        ):
-
-            if v % 3 != 0:
-                continue
-
-            x = v // 3
-
-            remaining = self.n - v
-
-            for y in range(
-                1,
-                remaining
-            ):
-
-                z = remaining - y
-
-                if not (
-                    x != 0
-                    and x > y
-                    and x > z
-                    and y != 0
-                    and z != 0
-                    and y != z
-                    and (
-                        y == 2 * z
-                        or z == 2 * y
-                    )
-                    and y != 1
-                    and z != 1
-                ):
+                if remaining % 2 != 0:
                     continue
 
-                for l in range(
-                    -x,
-                    x + 1
+                y = remaining // 2
+
+                if (
+                    x > y
+                    and x != y
+                    and y != 1
+                    and y > 0
                 ):
 
-                    a = x - l
-                    b = x + l
+                    result.append(
+                        (x, y, x, y, x)
+                    )
 
-                    if (
-                        a > y
-                        and a > z
-                        and b > y
-                        and b > z
+        # -------------------------------------------------
+        # MODERATE MINI ARIDHI
+        #
+        # (x-l) + y + x + y + (x+l)
+        # total = 3x + 2y
+        # -------------------------------------------------
+
+        elif level == "Moderate":
+
+            for x in range(
+                0,
+                total // 3 + 1
+            ):
+
+                remaining = total - 3 * x
+
+                if remaining % 2 != 0:
+                    continue
+
+                y = remaining // 2
+
+                if (
+                    x > y
+                    and x != y
+                    and y != 1
+                    and y > 0
+                ):
+
+                    for l in range(
+                        -(x // 2),
+                        x // 2 + 1
                     ):
 
-                        self.aridhis.append(
-                            (a, y, x, z, b)
+                        a = x - l
+                        b = x + l
+
+                        if (
+                            l != 0
+                            and a > y
+                            and b > y
+                            and a != y
+                            and b != y
+                        ):
+
+                            result.append(
+                                (a, y, x, y, b)
+                            )
+
+        # -------------------------------------------------
+        # HARD MINI ARIDHI
+        #
+        # total = 3x + y + z
+        # y = 2z OR z = 2y
+        # -------------------------------------------------
+
+        elif level == "Hard":
+
+            for v in range(
+                total - 1,
+                0,
+                -1
+            ):
+
+                if v % 3 != 0:
+                    continue
+
+                x = v // 3
+                remaining = total - v
+
+                for y in range(
+                    1,
+                    remaining
+                ):
+
+                    z = remaining - y
+
+                    if not (
+                        x != 0
+                        and x > y
+                        and x > z
+                        and y != 0
+                        and z != 0
+                        and y != z
+                        and (
+                            y == 2 * z
+                            or z == 2 * y
                         )
+                        and y != 1
+                        and z != 1
+                    ):
+                        continue
+
+                    for l in range(
+                        -x,
+                        x + 1
+                    ):
+
+                        a = x - l
+                        b = x + l
+
+                        if (
+                            a > y
+                            and a > z
+                            and b > y
+                            and b > z
+                        ):
+
+                            result.append(
+                                (a, y, x, z, b)
+                            )
+
+        return list(
+            dict.fromkeys(result)
+        )
 
     # =====================================================
-    # GENERATE ARIDHIS
+    # CHECK MINI-ARIDHI
+    #
+    # The internal y (or y/z for Hard) is the y_mini.
+    # y_mini can only be 2, 3, or 4.
+    # =====================================================
+
+    def valid_mini_aridhi(
+        self,
+        mini_aridhi
+    ):
+
+        if self.level in [
+            "Simple",
+            "Moderate"
+        ]:
+
+            y_mini = mini_aridhi[1]
+
+            return y_mini in [
+                2,
+                3,
+                4
+            ]
+
+        if self.level == "Hard":
+
+            y_mini = mini_aridhi[1]
+            z_mini = mini_aridhi[3]
+
+            return (
+                y_mini in [2, 3, 4]
+                and z_mini in [2, 3, 4]
+            )
+
+        return False
+
+    # =====================================================
+    # OUTER Y VALIDATION
+    #
+    # The outer y must always be greater than y_mini.
+    # For Hard, it must be greater than both mini y/z.
+    # =====================================================
+
+    def valid_outer_y(
+        self,
+        y,
+        mini_aridhi
+    ):
+
+        if self.level in [
+            "Simple",
+            "Moderate"
+        ]:
+
+            return y > mini_aridhi[1]
+
+        return (
+            y > mini_aridhi[1]
+            and y > mini_aridhi[3]
+        )
+
+    # =====================================================
+    # OUTER ARIDHI GENERATION
+    #
+    # The outer aridhi is always:
+    #
+    #       x + y + x + y + x
+    #
+    # but x itself must be a mini aridhi of the
+    # level selected by the user.
+    #
+    # For n > 60:
+    #       y <= 15
     # =====================================================
 
     def generate_aridhis(self):
 
-        if self.level == "Simple":
+        self.aridhis = []
 
-            self.generate_simple()
+        # -------------------------------------------------
+        # Only Simple outer structure is used now.
+        # The selected level controls x.
+        # -------------------------------------------------
 
-        elif self.level == "Moderate":
+        for x in range(
+            1,
+            self.n // 3 + 1
+        ):
 
-            self.generate_moderate()
+            remaining = self.n - 3 * x
 
-        elif self.level == "Hard":
+            if remaining < 0 or remaining % 2 != 0:
+                continue
 
-            self.generate_hard()
+            y = remaining // 2
 
-        else:
+            if (
+                x <= y
+                or x == y
+                or y <= 0
+                or y == 1
+            ):
+                continue
 
-            print("\nInvalid level.")
+            # For large aridhis, restrict y.
+            if self.n > 60 and y > 15:
+                continue
 
-            return
+            # x must itself be a valid mini aridhi.
+            mini_aridhis = self.generate_mini_aridhis(
+                x,
+                self.level
+            )
 
-        # Remove numerical duplicates
+            if not mini_aridhis:
+                continue
+
+            # Every mini-aridhi of x must use only
+            # y_mini values 2, 3, or 4, and the outer
+            # y must be larger than y_mini.
+            valid_mini = False
+
+            for mini_aridhi in mini_aridhis:
+
+                if self.valid_mini_aridhi(
+                    mini_aridhi
+                ) and self.valid_outer_y(
+                    y,
+                    mini_aridhi
+                ):
+
+                    valid_mini = True
+                    break
+
+            if not valid_mini:
+                continue
+
+            self.aridhis.append(
+                (x, y, x, y, x)
+            )
+
         self.aridhis = list(
             dict.fromkeys(
                 self.aridhis
             )
         )
+
+    # =====================================================
+    # BACKWARD-COMPATIBLE GENERATORS
+    # =====================================================
+
+    def generate_simple(self):
+        self.level = "Simple"
+        self.generate_aridhis()
+
+    def generate_moderate(self):
+        self.level = "Moderate"
+        self.generate_aridhis()
+
+    def generate_hard(self):
+        self.level = "Hard"
+        self.generate_aridhis()
 
     # =====================================================
     # COUNT COMBINATIONS
@@ -678,7 +849,44 @@ class AridhiGenerator:
         return True
 
     # =====================================================
-    # SIMPLE SOLLU COMBINATIONS
+    # NORMALIZE SOLLU FOR DUPLICATE COMPARISON
+    # =====================================================
+
+    def normalize_sollu(
+        self,
+        sollu
+    ):
+
+        # Ignore dots, spaces, and aridhi separators.
+        # Keep "_" because it represents kArvai.
+        return re.sub(
+            r"[.\s|]",
+            "",
+            sollu
+        )
+
+    def deduplicate_sollus(
+        self,
+        sollus
+    ):
+
+        unique = {}
+
+        for sollu in sollus:
+
+            key = self.normalize_sollu(
+                sollu
+            )
+
+            if key not in unique:
+                unique[key] = sollu
+
+        return sorted(
+            unique.values()
+        )
+
+    # =====================================================
+    # MINI-ARIDHI SOLLUS
     # =====================================================
 
     def generate_simple_group_aridhi(
@@ -689,7 +897,7 @@ class AridhiGenerator:
     ):
 
         x = aridhi[0]
-        y = aridhi[1]
+        y_mini = aridhi[1]
 
         x_options = self.get_group_sollus(
             x,
@@ -700,34 +908,13 @@ class AridhiGenerator:
         if not x_options:
             return []
 
-        # -------------------------------------------------
-        # y = 0
-        # -------------------------------------------------
-
-        if y == 0:
-
-            result = []
-
-            for x_sollu in x_options:
-
-                result.append(
-                    " | ".join(
-                        [
-                            x_sollu,
-                            x_sollu,
-                            x_sollu
-                        ]
-                    )
-                )
-
-            return sorted(
-                set(result)
-            )
-
         y_options = self.get_yz_sollus(
-            y,
+            y_mini,
             karvai
         )
+
+        if not y_options:
+            return []
 
         result = []
 
@@ -742,7 +929,6 @@ class AridhiGenerator:
                     x_sollu,
                     karvai
                 ):
-
                     valid_y.append(
                         y_sollu
                     )
@@ -763,12 +949,12 @@ class AridhiGenerator:
                         )
                     )
 
-        return sorted(
-            set(result)
+        return self.deduplicate_sollus(
+            result
         )
 
     # =====================================================
-    # MODERATE / HARD SOLLU COMBINATIONS
+    # MODERATE / HARD MINI-ARIDHI SOLLUS
     # =====================================================
 
     def generate_group_aridhi(
@@ -779,9 +965,9 @@ class AridhiGenerator:
     ):
 
         x1 = aridhi[0]
-        y = aridhi[1]
+        y_mini = aridhi[1]
         x2 = aridhi[2]
-        z = aridhi[3]
+        z_mini = aridhi[3]
         x3 = aridhi[4]
 
         x1_options = self.get_group_sollus(
@@ -807,16 +993,15 @@ class AridhiGenerator:
             and x2_options
             and x3_options
         ):
-
             return []
 
         y_options = self.get_yz_sollus(
-            y,
+            y_mini,
             karvai
         )
 
         z_options = self.get_yz_sollus(
-            z,
+            z_mini,
             karvai
         )
 
@@ -827,31 +1012,33 @@ class AridhiGenerator:
 
         for sx1 in x1_options:
 
+            valid_y = []
+
             for sy in y_options:
 
-                if (
-                    y != 0
-                    and not self.valid_yz_for_x(
-                        sy,
-                        sx1,
-                        karvai
-                    )
+                if self.valid_yz_for_x(
+                    sy,
+                    sx1,
+                    karvai
                 ):
-                    continue
+                    valid_y.append(sy)
+
+            for sy in valid_y:
 
                 for sx2 in x2_options:
 
+                    valid_z = []
+
                     for sz in z_options:
 
-                        if (
-                            z != 0
-                            and not self.valid_yz_for_x(
-                                sz,
-                                sx2,
-                                karvai
-                            )
+                        if self.valid_yz_for_x(
+                            sz,
+                            sx2,
+                            karvai
                         ):
-                            continue
+                            valid_z.append(sz)
+
+                    for sz in valid_z:
 
                         for sx3 in x3_options:
 
@@ -867,8 +1054,159 @@ class AridhiGenerator:
                                 )
                             )
 
-        return sorted(
-            set(result)
+        return self.deduplicate_sollus(
+            result
+        )
+
+    def generate_mini_group_aridhi(
+        self,
+        mini_aridhi,
+        group,
+        karvai
+    ):
+
+        if self.level == "Simple":
+
+            return self.generate_simple_group_aridhi(
+                mini_aridhi,
+                group,
+                karvai
+            )
+
+        return self.generate_group_aridhi(
+            mini_aridhi,
+            group,
+            karvai
+        )
+
+    # =====================================================
+    # BUILD OUTER Y SOLLUS
+    #
+    # y <= 5:
+    #       use the original Y/Z sollus.
+    #
+    # y > 5:
+    #       use x-sollus from the opposite group.
+    # =====================================================
+
+    def get_y_piece_sollus(
+        self,
+        y,
+        x_group,
+        karvai
+    ):
+
+        if y <= 5:
+
+            return self.get_yz_sollus(
+                y,
+                karvai
+            )
+
+        # -------------------------------------------------
+        # y > 5 must use the opposite x-sollu group.
+        # get_group_sollus() also handles values > 9 by
+        # combining the smaller defined group sollus.
+        # -------------------------------------------------
+
+        opposite_group = (
+            self.group2
+            if x_group is self.group1
+            else self.group1
+        )
+
+        return self.get_group_sollus(
+            y,
+            opposite_group,
+            karvai
+        )
+
+    # =====================================================
+    # OUTER ARIDHI SOLLU COMBINATIONS
+    # =====================================================
+
+    def generate_outer_group_aridhi(
+        self,
+        aridhi,
+        group,
+        karvai
+    ):
+
+        x = aridhi[0]
+        y = aridhi[1]
+
+        mini_aridhis = self.generate_mini_aridhis(
+            x,
+            self.level
+        )
+
+        result = []
+
+        for mini_aridhi in mini_aridhis:
+
+            if not self.valid_mini_aridhi(
+                mini_aridhi
+            ):
+                continue
+
+            if not self.valid_outer_y(
+                y,
+                mini_aridhi
+            ):
+                continue
+
+            x_options = self.generate_mini_group_aridhi(
+                mini_aridhi,
+                group,
+                karvai
+            )
+
+            if not x_options:
+                continue
+
+            y_options = self.get_y_piece_sollus(
+                y,
+                group,
+                karvai
+            )
+
+            if not y_options:
+                continue
+
+            for x_sollu in x_options:
+
+                valid_y = []
+
+                for y_sollu in y_options:
+
+                    if self.valid_yz_for_x(
+                        y_sollu,
+                        x_sollu,
+                        karvai
+                    ):
+
+                        valid_y.append(
+                            y_sollu
+                        )
+
+                for y1 in valid_y:
+
+                    for y2 in valid_y:
+
+                        result.append(
+                            " | ".join(
+                                [
+                                    x_sollu,
+                                    y1,
+                                    x_sollu,
+                                    y2,
+                                    x_sollu
+                                ]
+                            )
+                        )
+
+        return self.deduplicate_sollus(
+            result
         )
 
     # =====================================================
@@ -1026,18 +1364,21 @@ class AridhiGenerator:
 
             talam = input(
                 "\nEnter tALam "
-                "(a = Adi, r = rUpakam): "
+                "(a = Adi, r = rUpakam, "
+                "k = khaNDa cApu, m = mizra cApu): "
             ).strip().lower()
 
             if talam in [
                 "a",
-                "r"
+                "r",
+                "k",
+                "m"
             ]:
 
                 return talam
 
             print(
-                "Please enter a or r."
+                "Please enter a, r, k, or m."
             )
 
     # =====================================================
@@ -1162,66 +1503,69 @@ class AridhiGenerator:
         visual_units
     ):
 
-        if talam == "a":
-            number_of_aksharas = 8
-            aksharas_per_row = 2
-        else:
-            number_of_aksharas = 3
-            aksharas_per_row = 3
+        # mAtrAs in each akshara:
+        #
+        # Adi:
+        #       1### 2### 3### 4### ...
+        #
+        # rUpakam:
+        #       1### 2### 3###
+        #
+        # khaNDa cApu:
+        #       1### 2# 3###
+        #
+        # mizra cApu:
+        #       1# 2### 3### 4###
 
-        total_matras = number_of_aksharas * 4
+        talam_patterns = {
+            "a": [4, 4, 4, 4, 4, 4, 4, 4],
+            "r": [4, 4, 4],
+            "k": [4, 2, 4],
+            "m": [2, 4, 4, 4]
+        }
+
+        row_sizes = {
+            "a": 2,
+            "r": 3,
+            "k": 3,
+            "m": 4
+        }
+
+        pattern = talam_patterns[talam]
+        aksharas_per_row = row_sizes[talam]
+
+        total_matras = sum(pattern)
 
         visual_units = visual_units[:]
 
         while len(visual_units) < total_matras:
             visual_units.append("_")
 
-        # ---------------------------------------------
-        # Print rows
-        # ---------------------------------------------
+        matra_index = 0
 
         for row_start in range(
             0,
-            number_of_aksharas,
+            len(pattern),
             aksharas_per_row
         ):
 
-            row_aksharas = min(
-                aksharas_per_row,
-                number_of_aksharas - row_start
-            )
-
-            row_units = visual_units[
-                row_start * 4:
-                (row_start + row_aksharas) * 4
+            row_pattern = pattern[
+                row_start:row_start + aksharas_per_row
             ]
 
             # =============================================
             # tALam row
             # =============================================
 
-            talam_parts = []
+            talam_string = ""
 
-            for i in range(row_aksharas):
+            for i, matra_count in enumerate(row_pattern):
 
                 akshara = row_start + i + 1
 
-                talam_parts.extend([
-                    str(akshara),
-                    "#",
-                    "#",
-                    "#"
-                ])
-
-            # Add vertical line AFTER every akshara
-            talam_string = ""
-
-            for i in range(row_aksharas):
-
-                start = i * 4
-                end = start + 4
-
-                block = talam_parts[start:end]
+                block = [str(akshara)] + ["#"] * (
+                    matra_count - 1
+                )
 
                 talam_string += (
                     "   ".join(
@@ -1239,15 +1583,16 @@ class AridhiGenerator:
             # =============================================
 
             sollu_string = ""
+            row_matra_index = matra_index
 
-            for i in range(row_aksharas):
+            for matra_count in row_pattern:
 
-                start = i * 4
-                end = start + 4
+                block = visual_units[
+                    row_matra_index:
+                    row_matra_index + matra_count
+                ]
 
-                block = row_units[start:end]
-
-                while len(block) < 4:
+                while len(block) < matra_count:
                     block.append("_")
 
                 sollu_string += (
@@ -1259,9 +1604,14 @@ class AridhiGenerator:
 
                 sollu_string += "   |   "
 
-            print(sollu_string.rstrip())
+                row_matra_index += matra_count
 
+            print(sollu_string.rstrip())
             print()
+
+            matra_index = row_matra_index
+
+
     # =====================================================
     # VISUALISE SELECTED ARIDHI
     # =====================================================
@@ -1278,22 +1628,42 @@ class AridhiGenerator:
             selected
         )
 
-        if talam == "a":
-
-            avartana_size = 32
-
-        else:
-
-            avartana_size = 12
-
-        # -------------------------------------------------
-        # Smallest complete Avartana >= n
+        # -----------------------------------------------------
+        # tALam definitions
         #
-        # 32 -> 32
-        # 33 -> 64
-        # 12 -> 12
-        # 13 -> 24
-        # -------------------------------------------------
+        # Adi:
+        #       8 × 4 = 32 mAtrAs
+        #
+        # rUpakam:
+        #       3 × 4 = 12 mAtrAs
+        #
+        # khaNDa cApu:
+        #       4 + 2 + 4 = 10 mAtrAs
+        #
+        # mizra cApu:
+        #       2 + 4 + 4 + 4 = 14 mAtrAs
+        # -----------------------------------------------------
+
+        talam_patterns = {
+            "a": [4, 4, 4, 4, 4, 4, 4, 4],
+            "r": [4, 4, 4],
+            "k": [4, 2, 4],
+            "m": [2, 4, 4, 4]
+        }
+
+        talam_names = {
+            "a": "ADI tALam",
+            "r": "rUpakam tALam",
+            "k": "khaNDa cApu",
+            "m": "mizra cApu"
+        }
+
+        pattern = talam_patterns[talam]
+        avartana_size = sum(pattern)
+
+        # -----------------------------------------------------
+        # Smallest complete Avartana >= n
+        # -----------------------------------------------------
 
         avartana = (
             (
@@ -1304,9 +1674,9 @@ class AridhiGenerator:
 
         blank = avartana - n
 
-        # -------------------------------------------------
+        # -----------------------------------------------------
         # Convert sollu to individual mAtrAs
-        # -------------------------------------------------
+        # -----------------------------------------------------
 
         sollu_units = (
             self.sollu_to_matra_units(
@@ -1314,30 +1684,26 @@ class AridhiGenerator:
             )
         )
 
-        # -------------------------------------------------
+        # -----------------------------------------------------
         # Blank mAtrAs occur BEFORE the korvai
-        # -------------------------------------------------
+        # -----------------------------------------------------
 
         visual_units = (
             ["_"] * blank
             + sollu_units
         )
 
-        # -------------------------------------------------
+        # -----------------------------------------------------
         # Header
-        # -------------------------------------------------
+        # -----------------------------------------------------
 
         print(
             "\n" + "=" * 70
         )
 
-        if talam == "a":
-
-            print("ADI tALam")
-
-        else:
-
-            print("rUpakam tALam")
+        print(
+            talam_names[talam]
+        )
 
         print(
             "=" * 70
@@ -1356,35 +1722,30 @@ class AridhiGenerator:
         )
 
         print(
+            f"Avartana size : {avartana_size}"
+        )
+
+        print(
             "\nVisualization:\n"
         )
 
-        # -------------------------------------------------
+        # -----------------------------------------------------
         # Print complete Avartana(s)
-        # -------------------------------------------------
+        # -----------------------------------------------------
 
         remaining = visual_units[:]
 
         while remaining:
 
-            if talam == "a":
-
-                cycle_size = 32
-
-            else:
-
-                cycle_size = 12
-
             current = remaining[
-                :cycle_size
+                :avartana_size
             ]
 
             remaining = remaining[
-                cycle_size:
+                avartana_size:
             ]
 
-            while len(current) < cycle_size:
-
+            while len(current) < avartana_size:
                 current.append("_")
 
             self.print_talam_visualization(
@@ -1444,52 +1805,22 @@ class AridhiGenerator:
             )
 
         # =================================================
-        # GROUP 1
+        # GROUP 1 / GROUP 2
+        #
+        # The selected level applies to x as a mini-aridhi.
         # =================================================
 
-        if self.level == "Simple":
+        group1 = self.generate_outer_group_aridhi(
+            selected,
+            self.group1,
+            karvai
+        )
 
-            group1 = (
-                self.generate_simple_group_aridhi(
-                    selected,
-                    self.group1,
-                    karvai
-                )
-            )
-
-        else:
-
-            group1 = (
-                self.generate_group_aridhi(
-                    selected,
-                    self.group1,
-                    karvai
-                )
-            )
-
-        # =================================================
-        # GROUP 2
-        # =================================================
-
-        if self.level == "Simple":
-
-            group2 = (
-                self.generate_simple_group_aridhi(
-                    selected,
-                    self.group2,
-                    karvai
-                )
-            )
-
-        else:
-
-            group2 = (
-                self.generate_group_aridhi(
-                    selected,
-                    self.group2,
-                    karvai
-                )
-            )
+        group2 = self.generate_outer_group_aridhi(
+            selected,
+            self.group2,
+            karvai
+        )
 
         # =================================================
         # PRINT GROUP 1
